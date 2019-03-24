@@ -1,4 +1,11 @@
 * Ex1
+  - [[./docker-compose.yml]]
+* Ex2
+  #+BEGIN_SRC bash
+  <ES directory>/bin/elasticsearch-plugin install \
+    pl.allegro.tech.elasticsearch.plugin:elasticsearch-analysis-morfologik:6.6.2
+ #+END_SRC
+* Ex3 - Create tokenizer
 ** Create Tokenizer
    #+BEGIN_SRC json
    PUT law_index4
@@ -31,31 +38,11 @@
     }
   }
   #+END_SRC json
-
-** Load data v1
-  #+BEGIN_SRC bash
- #!/bin/bash
-  index="law_index_4"
-  echo "#!/bin/bash" > ./loadit.sh
-  echo "" >> ./loadit.sh
-  echo "curl -XDELETE http://localhost:9200/law_index4?pretty" >> ./loadit.sh
-  echo "" >> ./loadit.sh
-  echo "curl -XPUT http://localhost:9200/law_index4?pretty" >> ./loadit.sh
-  echo "" >> ./loadit.sh
-  COUNTER=0
-  FILES="./ustawy/*.txt"
-  for f in $FILES
-  do
-    COUNTER=$[COUNTER + 1]
-    CONTENT=`cat $f | sed "s/'//g" | sed "s/\"/\\\"/g`
-    echo "curl -XPUT http://localhost:9200/law_index4/doc/$COUNTER -H "\"Content-Type: application/json\"" -d \
-        '{\"content\" : \"$CONTENT\", \"filename\": \"$f\"}'" >> ./loadit.sh
-    echo "" >> ./loadit.sh
-  done
-  chmod 777 ./loadit.sh
-  /bin/bash ./loadit.sh
-  #+END_SRC
-** Load data v2
+  
+* Ex4 Create index 
+  The same as  [[Ex3 - Create tokenizer]]
+* Ex5 Load data
+** Load data
   #+BEGIN_SRC python
   from elasticsearch import Elasticsearch
   from elasticsearch import helpers
@@ -76,3 +63,50 @@
 
 
 5QQxOiGlqrNNc+Ql7Ez9P1viiTPys15+AJZvtDowVHA
+* Ex6 Count documents with ~ustawa~
+** Request
+   POST law_index4/_search?size=1
+  #+BEGIN_SRC json
+  {
+    "query": {
+      "terms": {
+        "content": [ "ustawa" ]
+      }
+    }
+  }   
+  #+END_SRC json
+
+** Response
+  #+BEGIN_SRC json
+  {
+    "took" : 6,
+    "timed_out" : false,
+    "_shards" : {
+      "total" : 5,
+      "successful" : 5,
+      "skipped" : 0,
+      "failed" : 0
+    },
+    "hits" : {
+      "total" : 1179,
+      "max_score" : 0.0,
+      "hits" : [ ]
+    }
+  }
+  #+END_SRC 
+* Ex7 ~kpc~ in order
+  Determine the number of legislative acts containing the words ~kodeks postępowania cywilnego~
+  in the specified order, but in an *any* inflection form.
+** Request
+  #+begin_src json
+
+  #+end_src
+* other
+#+begin_src python :results  value
+def ala(x):
+  return x*2
+return ala(4)
+#+end_src
+
+#+RESULTS:
+: 8
