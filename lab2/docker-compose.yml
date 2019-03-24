@@ -1,0 +1,65 @@
+version: '3.2'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.6.2
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - discovery.zen.minimum_master_nodes=1
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    # volumes:
+    #   - type: bind
+    #     source: /opt/data/elasticsearch/elkdata
+    #     target: /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - elknet
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.6.2
+    environment:
+      - SERVER_NAME="NLP Kibana"
+      - SERVER_NAME=http://elasticsearch:9200
+    # volumes:
+    #   - type: bind
+    #     source: /opt/data/elasticsearch/kibanadata
+    #     target: /usr/share/kibana/data
+    ports:
+      - "5601:5601"
+    networks:
+      - elknet
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:6.4.2
+  #   volumes:
+  #     - type: bind
+  #       source: /opt/elk/pipelines
+  #       target: /usr/share/logstash/pipeline
+  #   ports:
+  #     - "192.168.0.2:5000:5000/udp"
+  #     - "5043:5043"
+  #   environment:
+  #     - LOG_LEVEL=debug
+  #   networks:
+  #     - elknet
+  # metricbeat:
+  #   image: docker.elastic.co/beats/metricbeat:6.4.2
+  #   volumes:
+  #     - type: bind
+  #       source: /opt/elk/metricbeat/metricbeat.yml
+  #       target: /usr/share/metricbeat/metricbeat.yml
+  #     - /proc:/hostfs/proc:ro
+  #     - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+  #     - /:/hostfs:ro
+
+  #   depends_on: ['elasticsearch', 'kibana']
+  #   networks:
+  #     - elknet
+
+networks:
+  elknet:

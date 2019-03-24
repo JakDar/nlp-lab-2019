@@ -1,0 +1,78 @@
+* Ex1
+** Create Tokenizer
+   #+BEGIN_SRC json
+   PUT law_index4
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_custom_analyzer": {
+            "type":      "custom", 
+            "tokenizer": "standard",
+            "filter": [
+              "morfologik_stem",
+              "law_synonyms",
+              "lowercase"
+            ]
+          }
+        },
+        "filter" : {
+            "law_synonyms" : {
+                "type" : "synonym",
+                "synonyms" : [
+                    "kpk  => kodeks postępowania cywilnego",
+                    "kpc => kodeks postępowania karnego",
+                    "kk => kodeks karny",
+                    "kc => kodeks cywilny"
+                ]
+            }
+        }
+      }
+    }
+  }
+  #+END_SRC json
+
+** Load data v1
+  #+BEGIN_SRC bash
+ #!/bin/bash
+  index="law_index_4"
+  echo "#!/bin/bash" > ./loadit.sh
+  echo "" >> ./loadit.sh
+  echo "curl -XDELETE http://localhost:9200/law_index4?pretty" >> ./loadit.sh
+  echo "" >> ./loadit.sh
+  echo "curl -XPUT http://localhost:9200/law_index4?pretty" >> ./loadit.sh
+  echo "" >> ./loadit.sh
+  COUNTER=0
+  FILES="./ustawy/*.txt"
+  for f in $FILES
+  do
+    COUNTER=$[COUNTER + 1]
+    CONTENT=`cat $f | sed "s/'//g" | sed "s/\"/\\\"/g`
+    echo "curl -XPUT http://localhost:9200/law_index4/doc/$COUNTER -H "\"Content-Type: application/json\"" -d \
+        '{\"content\" : \"$CONTENT\", \"filename\": \"$f\"}'" >> ./loadit.sh
+    echo "" >> ./loadit.sh
+  done
+  chmod 777 ./loadit.sh
+  /bin/bash ./loadit.sh
+  #+END_SRC
+** Load data v2
+  #+BEGIN_SRC python
+  from elasticsearch import Elasticsearch
+  from elasticsearch import helpers
+  import os
+  es = Elasticsearch()
+
+  actions = [{
+      "_index": "law_index4",
+      "_id": i,
+      "_source": {
+          "content": open("ustawy/" + file).read(),
+          "filename": file
+      }
+  } for i, file in enumerate(os.listdir("ustawy"))]
+
+  helpers.bulk(es, actions)
+  #+END_SRC
+
+
+5QQxOiGlqrNNc+Ql7Ez9P1viiTPys15+AJZvtDowVHA
