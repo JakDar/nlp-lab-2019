@@ -1,5 +1,6 @@
 * Info
   | Jakub Darul | Lab2 | Elasticsearch |
+  [[https://github.com/apohllo/nlp/blob/master/2-fts.md][Exercise description]]
 * Ex1
   - [[./docker-compose.yml]]
 * Ex2
@@ -82,8 +83,6 @@ actions = [{
 helpers.bulk(es, actions)
   #+END_SRC
 
-
-5QQxOiGlqrNNc+Ql7Ez9P1viiTPys15+AJZvtDowVHA
 * Ex6 Count documents with ~ustawa~
 ** Request
    POST law_index5/_search?size=1
