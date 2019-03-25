@@ -1,3 +1,5 @@
+* Info
+  | Jakub Darul | Lab2 | Elasticsearch |
 * Ex1
   - [[./docker-compose.yml]]
 * Ex2
@@ -8,78 +10,134 @@
 * Ex3 - Create tokenizer
 ** Create Tokenizer
    #+BEGIN_SRC json
-   PUT law_index4
-  {
-    "settings": {
-      "analysis": {
-        "analyzer": {
-          "my_custom_analyzer": {
-            "type":      "custom", 
-            "tokenizer": "standard",
-            "filter": [
-              "morfologik_stem",
-              "law_synonyms",
-              "lowercase"
-            ]
-          }
+ PUT law_index6
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_custom_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "law_synonyms",
+            "morfologik_stem",
+            "lowercase"
+          ]
+        }
+      },
+      "filter": {
+        "law_synonyms": {
+          "type": "synonym",
+          "synonyms": [
+            "kpc  => kodeks postępowania cywilnego",
+            "kpk => kodeks postępowania karnego",
+            "kk => kodeks karny",
+            "kc => kodeks cywilny"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "_doc": {
+      "properties": {
+        "title": {
+          "type": "text",
+          "analyzer": "default",
+          "search_analyzer": "default",
+          "search_quote_analyzer": "default"
         },
-        "filter" : {
-            "law_synonyms" : {
-                "type" : "synonym",
-                "synonyms" : [
-                    "kpk  => kodeks postępowania cywilnego",
-                    "kpc => kodeks postępowania karnego",
-                    "kk => kodeks karny",
-                    "kc => kodeks cywilny"
-                ]
-            }
+        "content": {
+          "type": "text",
+          "analyzer": "my_custom_analyzer",
+          "search_analyzer": "my_custom_analyzer",
+          "search_quote_analyzer": "my_custom_analyzer"
         }
       }
     }
   }
-  #+END_SRC json
+}
+   #+END_SRC
   
 * Ex4 Create index 
   The same as  [[Ex3 - Create tokenizer]]
 * Ex5 Load data
 ** Load data
   #+BEGIN_SRC python
-  from elasticsearch import Elasticsearch
-  from elasticsearch import helpers
-  import os
-  es = Elasticsearch()
+from elasticsearch import Elasticsearch
+from elasticsearch import helpers
+import os
+es = Elasticsearch(retry_on_timeout=True)
 
-  actions = [{
-      "_index": "law_index4",
-      "_id": i,
-      "_source": {
-          "content": open("ustawy/" + file).read(),
-          "filename": file
-      }
-  } for i, file in enumerate(os.listdir("ustawy"))]
+actions = [{
+    "_index": "law_index6",
+    "_id": i,
+    "_type":"_doc",
+    "_source": {
+        "content": open("ustawy/" + file).read(),
+        "filename": file
+    }
+} for i, file in enumerate(os.listdir("ustawy"))]
 
-  helpers.bulk(es, actions)
+helpers.bulk(es, actions)
   #+END_SRC
 
 
 5QQxOiGlqrNNc+Ql7Ez9P1viiTPys15+AJZvtDowVHA
 * Ex6 Count documents with ~ustawa~
 ** Request
-   POST law_index4/_search?size=1
+   POST law_index5/_search?size=1
   #+BEGIN_SRC json
-  {
-    "query": {
-      "terms": {
-        "content": [ "ustawa" ]
-      }
+{
+  "query": {
+    "query_string": {
+      "query": "ustawa"
     }
-  }   
+  }
+}
   #+END_SRC json
 
 ** Response
   #+BEGIN_SRC json
+{
+  "took" : 18,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 1179,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  }
+}
+  #+END_SRC 
+* Ex7 ~kpc~ in order
+  Determine the number of legislative acts containing the words ~kodeks postępowania cywilnego~
+  in the specified order, but in an *any* inflection form.
+** Kpc 
+***  Request
+#+begin_src json
+  GET law_index6/_search?size=0
   {
-    "took" : 6,
+    "query": {
+      "multi_match": {
+        "query": "kpc",
+        "fields": [
+          "content"
+        ],
+        "type": "phrase"
+        }
+    }
+  }
+  #+end_src
+*** Response
+  #+begin_src json
+  {
+    "took" : 29,
     "timed_out" : false,
     "_shards" : {
       "total" : 5,
@@ -88,25 +146,458 @@
       "failed" : 0
     },
     "hits" : {
-      "total" : 1179,
+      "total" : 100,
       "max_score" : 0.0,
       "hits" : [ ]
     }
   }
-  #+END_SRC 
-* Ex7 ~kpc~ in order
-  Determine the number of legislative acts containing the words ~kodeks postępowania cywilnego~
-  in the specified order, but in an *any* inflection form.
-** Request
-  #+begin_src json
-
   #+end_src
-* other
-#+begin_src python :results  value
-def ala(x):
-  return x*2
-return ala(4)
+** Kodeks postępowania cywilnego
+***  Request
+#+begin_src json
+  GET law_index6/_search?size=0
+  {
+    "query": {
+      "multi_match": {
+        "query": "kodeks postępowania cywilnego",
+        "fields": [
+          "content"
+        ],
+        "type": "phrase"
+        }
+    }
+  }
+  #+end_src
+*** Response
+  #+begin_src json
+  {
+    "took" : 8,
+    "timed_out" : false,
+    "_shards" : {
+      "total" : 5,
+      "successful" : 5,
+      "skipped" : 0,
+      "failed" : 0
+    },
+    "hits" : {
+      "total" : 100,
+      "max_score" : 0.0,
+      "hits" : [ ]
+    }
+  }
+  #+end_src
+We can see that our sysonyms do work
+
+** Cywilnego postępowania kodeks
+*** Request
+#+begin_src json
+  GET law_index6/_search?size=0
+  {
+    "query": {
+      "multi_match": {
+        "query": "cywilnego postępowania cywilnego",
+        "fields": [
+          "content"
+        ],
+        "type": "phrase"
+        }
+    }
+  }
+  #+end_src
+
+*** Response
+#+begin_src json
+{
+  "took" : 2,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 0,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  }
+}
 #+end_src
 
-#+RESULTS:
-: 8
+We can see that our query words have to be in order.
+
+* Ex8 ~wchodzi w życie~ 
+wchodzi w życie (in any form) allowing for ~up to 2 additional~ words in the searched phrase.
+
+** Request
+   #+BEGIN_SRC json 
+  GET law_index6/_search?size=0
+  {
+    "query": {
+      "multi_match": {
+        "query": "wchodzi w życie",
+        "fields": [
+          "content"
+        ],
+        "type": "phrase",
+        "slop":2
+        }
+    }
+  }
+   #+END_SRC
+** Response
+   #+BEGIN_SRC json 
+{
+  "took" : 1,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 1175,
+    "max_score" : 0.0,
+    "hits" : [ ]
+  }
+}
+   #+END_SRC
+
+There is no difference between  using slop and not using it in our text corups,
+ but in custom test examples this parameter proven to be what we searched for.
+
+* Ex9 find filenames most relevant to ~konstytucja~
+** Request
+#+BEGIN_SRC json
+GET law_index6/_search
+{
+  "_source": "filename",
+  "query": {
+    "match": {
+      "content": "konstytucja"
+    }
+  },
+  "size": 10
+}
+#+END_SRC 
+** Response
+#+begin_src json
+{
+  "took" : 4,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 45,
+    "max_score" : 6.858217,
+    "hits" : [
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "69",
+        "_score" : 6.858217,
+        "_source" : {
+          "filename" : "2000_443.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "1095",
+        "_score" : 6.6960716,
+        "_source" : {
+          "filename" : "1997_629.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "120",
+        "_score" : 6.526139,
+        "_source" : {
+          "filename" : "2001_23.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "1025",
+        "_score" : 6.4635344,
+        "_source" : {
+          "filename" : "1997_604.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "106",
+        "_score" : 6.1810327,
+        "_source" : {
+          "filename" : "1996_350.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "494",
+        "_score" : 6.0937552,
+        "_source" : {
+          "filename" : "1997_642.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "1005",
+        "_score" : 5.507446,
+        "_source" : {
+          "filename" : "1996_199.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "211",
+        "_score" : 5.440424,
+        "_source" : {
+          "filename" : "1999_688.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "402",
+        "_score" : 5.3245173,
+        "_source" : {
+          "filename" : "2001_1082.txt"
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "270",
+        "_score" : 5.216243,
+        "_source" : {
+          "filename" : "2001_247.txt"
+        }
+      }
+    ]
+  }
+}
+
+#+end_src
+* Ex10 find matches for above
+** Request
+#+begin_src json
+GET law_index6/_search
+{
+  "_source": "filename", 
+  "query": {
+    "match": {
+      "content": "konstytucja"
+    }
+  },
+  "highlight" : {
+        "fields" : {
+            "content" : {"fragment_size": 20}
+        }
+    },
+  "size": 10
+}
+#+end_src
+** Response
+#+begin_src json
+{
+  "took" : 65,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 45,
+    "max_score" : 6.858217,
+    "hits" : [
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "69",
+        "_score" : 6.858217,
+        "_source" : {
+          "filename" : "2000_443.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "ust.\n  1 i art. 90 <em>Konstytucji</em>",
+            "ust. 1 lub art. 90 <em>Konstytucji</em>",
+            "ust. 1 lub art. 90 <em>Konstytucji</em>",
+            "ust. 1 i art. 90 <em>Konstytucji</em>",
+            "w art. 89 ust. 2\n  <em>Konstytucji</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "1095",
+        "_score" : 6.6960716,
+        "_source" : {
+          "filename" : "1997_629.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "i uchwalenia <em>Konstytucji</em>",
+            "poparcia projektowi <em>Konstytucji</em>",
+            "zgłoszenia projektu <em>Konstytucji</em>",
+            "poparcia  projektowi <em>Konstytucji</em>",
+            "Projekty <em>Konstytucji</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "120",
+        "_score" : 6.526139,
+        "_source" : {
+          "filename" : "2001_23.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "ogłasza się:\n   1) <em>Konstytucję</em>",
+            "zatwierdzającego zmianę <em>Konstytucji</em>",
+            "odwoływania na określone w <em>Konstytucji</em>",
+            "Sejm na określone w <em>Konstytucji</em>",
+            "odwoływania na określone w <em>Konstytucji</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "1025",
+        "_score" : 6.4635344,
+        "_source" : {
+          "filename" : "1997_604.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "partii politycznej z <em>Konstytucją</em>",
+            "zbadanie zgodności z <em>Konstytucją</em>",
+            "Badanie zgodności z <em>Konstytucją</em>",
+            "z \n                <em>Konstytucją</em>",
+            "z \n                <em>Konstytucją</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "106",
+        "_score" : 6.1810327,
+        "_source" : {
+          "filename" : "1996_350.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "Za naruszenie <em>Konstytucji</em>",
+            "określonym w art. 107 <em>Konstytucji</em>",
+            "Stanu za naruszenie <em>Konstytucji</em>",
+            "Stanu za naruszenie <em>Konstytucji</em>",
+            "naruszyły\n          <em>Konstytucję</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "494",
+        "_score" : 6.0937552,
+        "_source" : {
+          "filename" : "1997_642.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "międzynarodowych z\n               <em>Konstytucją</em>",
+            "organy państwowe, z <em>Konstytucją</em>",
+            "stwierdzenie zgodności z <em>Konstytucją</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "1005",
+        "_score" : 5.507446,
+        "_source" : {
+          "filename" : "1996_199.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "przygotowania i uchwalenia <em>Konstytucji</em>",
+            "przygotowania i uchwalenia <em>Konstytucji</em>",
+            "Polskiej zarządza poddanie <em>Konstytucji</em>",
+            "Przyjęcie w referendum <em>Konstytucji</em>",
+            "rozwiązania projektu <em>Konstytucji</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "211",
+        "_score" : 5.440424,
+        "_source" : {
+          "filename" : "1999_688.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "mowa w art. 118 ust. 2 <em>Konstytucji</em>",
+            "spraw, dla których <em>Konstytucja</em>",
+            "wymogom\n  zawartym w <em>Konstytucji</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "402",
+        "_score" : 5.3245173,
+        "_source" : {
+          "filename" : "2001_1082.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "cele określone w\n  <em>Konstytucji</em>",
+            "zbadanie zgodności z <em>Konstytucją</em>"
+          ]
+        }
+      },
+      {
+        "_index" : "law_index6",
+        "_type" : "_doc",
+        "_id" : "270",
+        "_score" : 5.216243,
+        "_source" : {
+          "filename" : "2001_247.txt"
+        },
+        "highlight" : {
+          "content" : [
+            "154 i 155\n         <em>Konstytucji</em>",
+            "trybie art. 154 i 155 <em>Konstytucji</em>"
+          ]
+        }
+      }
+    ]
+  }
+}
+
+
+#+end_src

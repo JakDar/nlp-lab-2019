@@ -1,11 +1,12 @@
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 import os
-es = Elasticsearch()
+es = Elasticsearch(retry_on_timeout=True)
 
 actions = [{
-    "_index": "law_index4",
+    "_index": "law_index6",
     "_id": i,
+    "_type":"_doc",
     "_source": {
         "content": open("ustawy/" + file).read(),
         "filename": file
