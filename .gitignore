@@ -1,6 +1,11 @@
 __pycache__/
 *.pyc
+*.iml
+.idea/
+target/
+*.lock
 .ipynb_checkpoints/
 ustawy/
+lower_ustawy/
 polimorfologik/
 *.out
