@@ -42,7 +42,7 @@ pub fn pmis() {
 
     let entries_vec = load_bigrams::load_entries();
     let entries = entries_vec.iter();
-    let bigram_count = entries.len() as i64;
+    let bigram_count = entries_vec.iter().map(|x|x.count).sum::<i64>();
 
     let word_counter = count_words(entries_vec.clone());
 

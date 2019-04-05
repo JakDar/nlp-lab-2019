@@ -57,7 +57,7 @@ fn denorm_entropy(counts: Vec<f64>) -> f64 {
 pub fn llr() {
     let bigrams = load_entries();
     let word_counts = count_words(bigrams.clone());
-    let bigram_count = bigrams.len() as i64;
+    let bigram_count = bigrams.iter().map(|x|x.count).sum::<i64>() as f64;
 
     let bigrams_iter = bigrams.iter();
 
@@ -82,8 +82,10 @@ pub fn llr() {
 
 
     llrs.sort_by(|a, b| b.llr.partial_cmp(&a.llr).unwrap_or(Ordering::Equal));
+    llrs.reverse();
 
-    llrs.iter().take(30).for_each(|c| println!("{}", c));
+    llrs.iter().take(3000).for_each(|c| println!("{}", c));
+
 }
 
 
