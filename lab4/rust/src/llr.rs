@@ -1,8 +1,8 @@
+use std::cmp::Ordering;
 use std::fmt::{Display, Error, Formatter};
 
 use crate::load_bigrams::load_entries;
 use crate::pmi::count_words;
-use std::cmp::Ordering;
 
 #[derive(Debug)]
 struct LlrEntry {
@@ -25,11 +25,11 @@ impl Display for LlrEntry {
 
 
 fn llr2x2(k11: f64, k12: f64, k21: f64, k22: f64) -> f64 {
-    2f64 * vec![
-        denorm_entropy(vec![k11 + k12, k21 + k22]),
-        denorm_entropy(vec![k11 + k21, k12 + k22]),
-        denorm_entropy(vec![k11, k12, k21, k22]),
-    ].iter().sum::<f64>()
+    2f64 * (
+        denorm_entropy(vec![k11 + k12, k21 + k22]) +
+            denorm_entropy(vec![k11 + k21, k12 + k22]) -
+            denorm_entropy(vec![k11, k12, k21, k22])
+    )
 }
 
 
@@ -57,7 +57,7 @@ fn denorm_entropy(counts: Vec<f64>) -> f64 {
 pub fn llr() {
     let bigrams = load_entries();
     let word_counts = count_words(bigrams.clone());
-    let bigram_count = bigrams.iter().map(|x|x.count).sum::<i64>() as f64;
+    let bigram_count = bigrams.iter().map(|x| x.count).sum::<i64>() as f64;
 
     let bigrams_iter = bigrams.iter();
 
@@ -72,9 +72,10 @@ pub fn llr() {
         let k22 = bigram_count as f64 - (k11 + k12 + k21);
 
 
-        let llr = llr2x2(k11,k12,k21,k22);
-        if llr.partial_cmp(&1f64) == None{ //todo:bcm - fix nans here
-            println!("k11:{}, k12:{}, k21:{}, k22:{}, llr: {}",k11,k12,k21,k22,llr);
+        let llr = llr2x2(k11, k12, k21, k22);
+        if llr.partial_cmp(&1f64) == None {
+            println!("OH no, NANs!");
+            println!("k11:{}, k12:{}, k21:{}, k22:{}, llr: {}", k11, k12, k21, k22, llr);
         }
 
         LlrEntry { w1: entry.w1.clone(), w2: entry.w2.clone(), llr }
@@ -82,10 +83,15 @@ pub fn llr() {
 
 
     llrs.sort_by(|a, b| b.llr.partial_cmp(&a.llr).unwrap_or(Ordering::Equal));
-    llrs.reverse();
+//    llrs.reverse();
 
-    llrs.iter().take(3000).for_each(|c| println!("{}", c));
+//    llrs.iter().take(30).for_each(|c| println!("{}", c));
 
+    for (i, entry) in llrs.iter().enumerate() {
+        if i % 200 == 0 {
+            println!("{}, {}", i, entry);
+        }
+    }
 }
 
 

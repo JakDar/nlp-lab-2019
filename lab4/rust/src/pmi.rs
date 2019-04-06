@@ -25,7 +25,7 @@ pub fn count_words(entries:Vec<Entry>) -> HashMap<String,i64>{
     let mut hmap: HashMap<String,i64> = HashMap::new();
 
 
-    for entry in entries { //todo:bcm - here we should have entry count
+    for entry in entries {
         let new_val = hmap.get(&entry.w1).unwrap_or(&0i64) +entry.count;
         hmap.insert(entry.w1,new_val);
 
@@ -38,7 +38,6 @@ pub fn count_words(entries:Vec<Entry>) -> HashMap<String,i64>{
 
 pub fn pmis() {
 
-    //todo- why heap allocated box?
 
     let entries_vec = load_bigrams::load_entries();
     let entries = entries_vec.iter();
@@ -50,7 +49,6 @@ pub fn pmis() {
         let w1_count = *(word_counter.get(entry.w1.as_str()).unwrap_or(&0i64)) as f64;
         let w2_count = *(word_counter.get(entry.w2.as_str()).unwrap_or(&0i64)) as f64;
 
-        //todo:review - compare results with lukasz
         let pmi = ((entry.count * bigram_count)as f64 / (w1_count * w2_count)).log(2.0);
 
         PmiEntry { w1: entry.w1.clone(), w2: entry.w2.clone(), pmi }
@@ -60,4 +58,11 @@ pub fn pmis() {
     pmis.sort_by(|a, b| b.pmi.partial_cmp(&a.pmi).unwrap());
 
     pmis.iter().take(30).for_each(|c| println!("{}", c));
+
+
+    for (i, entry) in pmis.iter().enumerate() {
+        if i % 100 == 0 {
+            println!("{}, {}", i, entry);
+        }
+    }
 }
