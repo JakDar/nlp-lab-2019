@@ -56,7 +56,7 @@ fn denorm_entropy(counts: Vec<f64>) -> f64 {
 
 pub fn llr() {
     let bigrams = load_entries();
-    let word_counts = count_words(bigrams.clone());
+    let (w1_counts,w2_counts) = count_words(bigrams.clone());
     let bigram_count = bigrams.iter().map(|x| x.count).sum::<i64>() as f64;
 
     let bigrams_iter = bigrams.iter();
@@ -64,8 +64,8 @@ pub fn llr() {
 
     let mut llrs = bigrams_iter.map(|entry| {
         let k11 = entry.count as f64;
-        let w1_count = *(word_counts.get(entry.w1.as_str()).unwrap_or(&0i64)) as f64;
-        let w2_count = *(word_counts.get(entry.w2.as_str()).unwrap_or(&0i64)) as f64;
+        let w1_count = *(w1_counts.get(entry.w1.as_str()).unwrap_or(&0i64)) as f64;
+        let w2_count = *(w2_counts.get(entry.w2.as_str()).unwrap_or(&0i64)) as f64;
 
         let k12 = w1_count - k11;
         let k21 = w2_count - k11;
@@ -85,13 +85,13 @@ pub fn llr() {
     llrs.sort_by(|a, b| b.llr.partial_cmp(&a.llr).unwrap_or(Ordering::Equal));
 //    llrs.reverse();
 
-//    llrs.iter().take(30).for_each(|c| println!("{}", c));
-
-    for (i, entry) in llrs.iter().enumerate() {
-        if i % 200 == 0 {
-            println!("{}, {}", i, entry);
-        }
-    }
+    llrs.iter().take(30).for_each(|c| println!("{}", c));
+//
+//    for (i, entry) in llrs.iter().enumerate() {
+//        if i % 200 == 0 {
+//            println!("{}, {}", i, entry);
+//        }
+//    }
 }
 
 
