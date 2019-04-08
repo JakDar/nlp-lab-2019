@@ -7,7 +7,7 @@ use crate::load_bigrams::Entry;
 use std::collections::HashMap;
 
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 struct PmiEntry {
     w1: String,
     w2: String,
@@ -49,20 +49,26 @@ pub fn pmis() {
         let w1_count = *(word_counter.get(entry.w1.as_str()).unwrap_or(&0i64)) as f64;
         let w2_count = *(word_counter.get(entry.w2.as_str()).unwrap_or(&0i64)) as f64;
 
+
         let pmi = ((entry.count * bigram_count)as f64 / (w1_count * w2_count)).log(2.0);
 
-        PmiEntry { w1: entry.w1.clone(), w2: entry.w2.clone(), pmi }
+        let res = PmiEntry { w1: entry.w1.clone(), w2: entry.w2.clone(), pmi };
+        if pmi as i32 == 18 {
+            println!("{};   w1: {}, w2: {}, bigram:{} entry: {}",res.clone(),w1_count,w2_count,bigram_count,entry.count);
+        }
+
+        res
     }).collect::<Vec<PmiEntry>>();
 
 
     pmis.sort_by(|a, b| b.pmi.partial_cmp(&a.pmi).unwrap());
 
-    pmis.iter().take(30).for_each(|c| println!("{}", c));
+    pmis.iter().take(300).for_each(|c| println!("{}", c));
 
 
-    for (i, entry) in pmis.iter().enumerate() {
-        if i % 100 == 0 {
-            println!("{}, {}", i, entry);
-        }
-    }
+//    for (i, entry) in pmis.iter().enumerate() {
+//        if i % 100 == 0 {
+//            println!("{}, {}", i, entry);
+//        }
+//    }
 }
