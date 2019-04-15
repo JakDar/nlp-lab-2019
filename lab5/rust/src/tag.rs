@@ -40,25 +40,33 @@ fn tagging_thread(port: i32, filenames: Vec<String>) -> JoinHandle<HashMap<Tagge
 }
 
 
-fn merge_counters(h1:HashMap<TaggedBigram,i32>,w2:HashMap<TaggedBigram,i32>){
+fn merged_counters(h1: HashMap<TaggedBigram, i32>, h2: HashMap<TaggedBigram, i32>) -> HashMap<TaggedBigram, i32> {
+    let mut res = h1;
 
+    for (bigram, h2_count) in h2 {
+        let h1_count = res.get(&bigram).unwrap_or(&0);
+        res.insert(bigram, h1_count + h2_count);
+    }
 
+    res
 }
 
-pub fn test() {
 
-    let x= tagging_thread(9200,vec![]);
-
-    exit(1);
+pub fn test_paralell(){
     let dir = ls("../../lower_ustawy");
-    let head = dir.first().unwrap().to_str().unwrap();
-    println!("{}", head);
+
 
 
     let mut bigrams: HashMap<TaggedBigram, i32> = HashMap::new();
 
-    let x = dir.iter().take(10).flat_map(move |ospath|
-        get_tags(9200, ospath.to_str().unwrap()))
+
+    let ports = vec![9200,9201,9202,9203,9204];
+
+    dir.iter()
+        .take(4)
+        .zip(ports)
+        .map(move |(ospath,port)|
+        tagging_thread(9200, vec![ospath.to_string().unwrap()]))
         .for_each(|bigram| {
             let count = bigrams.get(&bigram).unwrap_or(&0i32);
             bigrams.insert(bigram.clone(), *count);
@@ -66,7 +74,21 @@ pub fn test() {
 
     println!("{:?}", bigrams);
 
-    exit(1);
+}
+
+pub fn test() { //279 s for 4
+    let dir = ls("../../lower_ustawy");
+
+    let mut bigrams: HashMap<TaggedBigram, i32> = HashMap::new();
+
+    let x = dir.iter().take(4).flat_map(move |ospath|
+        get_tags(9200, ospath.to_str().unwrap()))
+        .for_each(|bigram| {
+            let count = bigrams.get(&bigram).unwrap_or(&0i32);
+            bigrams.insert(bigram.clone(), *count);
+        });
+
+    println!("{:?}", bigrams);
 }
 
 fn get_tags(port: i32, filename: &str) -> Vec<TaggedBigram> {

@@ -7,10 +7,19 @@ mod preprocess;
 pub mod load_bigrams;
 mod llr;
 mod tag;
-
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {
+    let start = SystemTime::now();
+
     ala();
+    let end= SystemTime::now();
+
+
+    let millis = end.duration_since(UNIX_EPOCH).unwrap() - start.duration_since(UNIX_EPOCH).unwrap();
+
+    println!("Worked: {:?}",millis);
+
     exit(1);
 
     //Fixme - not best Cli experience
