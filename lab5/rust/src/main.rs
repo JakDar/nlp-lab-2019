@@ -1,16 +1,15 @@
 use std::env;
-use clap::{Arg, App, SubCommand};
 use std::process::exit;
+
+use clap::{App, Arg, SubCommand};
 
 mod preprocess;
 pub mod load_bigrams;
-mod pmi;
 mod llr;
 mod tag;
 
 
 fn main() {
-
     ala();
     exit(1);
 
@@ -19,10 +18,10 @@ fn main() {
         .arg(Arg::with_name("preprocess")
             .long("preprocess")
             .help("Sanitizes input"))
-        .arg(Arg::with_name("pmi")
+        .arg(Arg::with_name("llr")
             .short("p")
-            .long("pmi")
-            .help("Computes pmi"))
+            .long("llr")
+            .help("Computes llr"))
         .arg(Arg::with_name("tags")
             .short("t")
             .long("tag")
@@ -30,9 +29,9 @@ fn main() {
         .get_matches();
 
 
-    if matches.occurrences_of("pmi") > 0 {
-        println!("pmi");
-        pmi::pmis();
+    if matches.occurrences_of("llr") > 0 {
+        println!("llr");
+        llr::llr();
     } else if matches.occurrences_of("tags") > 0 {
         println!("tags");
         println!("Not implemented");
@@ -46,7 +45,6 @@ fn main() {
 fn ala() {
 //    let args: Vec<_> = env::args().collect();
 
-
     tag::test();
 
 
@@ -58,3 +56,5 @@ fn ala() {
 //        _ => panic!("what to do?"),
 //    }
 }
+
+

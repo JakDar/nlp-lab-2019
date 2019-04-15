@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
 use std::fmt::{Display, Error, Formatter};
 
-use crate::load_bigrams::load_entries;
-use crate::pmi::count_words;
+use crate::load_bigrams::{load_entries, Entry};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 struct LlrEntry {
@@ -52,6 +52,21 @@ fn denorm_entropy(counts: Vec<f64>) -> f64 {
     }).sum::<f64>();
 
     sum * -1f64
+}
+
+pub fn count_words(entries: Vec<Entry>) -> (HashMap<String, i64>,HashMap<String, i64>) {
+    let mut hmap1: HashMap<String, i64> = HashMap::new();
+    let mut hmap2: HashMap<String, i64> = HashMap::new();
+
+
+    for entry in entries {
+        let new_val = hmap1.get(&entry.w1).unwrap_or(&0i64) + entry.count;
+        hmap1.insert(entry.w1, new_val);
+
+        let new_val2 = hmap2.get(&entry.w2).unwrap_or(&0i64) + entry.count;
+        hmap2.insert(entry.w2, new_val2);
+    }
+    (hmap1,hmap2)
 }
 
 pub fn llr() {

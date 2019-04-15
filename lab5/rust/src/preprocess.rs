@@ -6,8 +6,8 @@ use std::io::prelude::*;
 //todo - could add error handling and parallelize
 
 pub fn ls(path: &str)  -> Vec<OsString>{
-    use std::fs;
     let dir = fs::read_dir(path).unwrap().into_iter();
+    use std::fs;
 
     dir.map(|x| x.unwrap().path().as_os_str().to_os_string()).collect::<Vec<OsString>>()
 }
