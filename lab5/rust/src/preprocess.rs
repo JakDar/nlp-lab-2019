@@ -5,11 +5,11 @@ use std::io::prelude::*;
 
 //todo - could add error handling and parallelize
 
-pub fn ls(path: &str)  -> Vec<OsString>{
+pub fn ls(path: &str)  -> Vec<String>{
     let dir = fs::read_dir(path).unwrap().into_iter();
     use std::fs;
 
-    dir.map(|x| x.unwrap().path().as_os_str().to_os_string()).collect::<Vec<OsString>>()
+    dir.map(|x| x.unwrap().path().as_os_str().to_os_string().to_str().unwrap().to_string()).collect::<Vec<String>>()
 }
 
 //fn is_known(c:char) -> bool{
@@ -41,19 +41,18 @@ fn preprocess_file(in_filename:&str, out_filename:&str)-> Result<(),Error>{
 
 pub fn preprocess_all() {
     let dir =ls("../../ustawy");
-    let head = dir.first().unwrap().to_str().unwrap();
+    let head = dir.first().unwrap();
     println!("{}",head);
 
     create_dir("../../lower_ustawy").unwrap();
 
-    for ospath in dir{
-        let path= ospath.to_str().unwrap();
-        let filename:&str = path.split("/").last().unwrap();
+    for path in dir{
+        let filename:&str = &path.split("/").last().unwrap();
         println!("{}",filename);
         let out_filename ="../../lower_ustawy/".to_owned()+ filename;
 
 
-        preprocess_file(path,&out_filename).unwrap();
+        preprocess_file(&path,&out_filename).unwrap();
     }
 
 
