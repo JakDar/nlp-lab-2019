@@ -7,18 +7,19 @@ mod preprocess;
 mod llr;
 mod tag;
 pub mod utils;
+
 use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {
     let start = SystemTime::now();
 
     ala();
-    let end= SystemTime::now();
+    let end = SystemTime::now();
 
 
     let millis = end.duration_since(UNIX_EPOCH).unwrap() - start.duration_since(UNIX_EPOCH).unwrap();
 
-    println!("Worked: {:?}",millis);
+    println!("Worked: {:?}", millis);
 
     exit(1);
 
@@ -47,23 +48,10 @@ fn main() {
     } else if matches.occurrences_of("preprocess") > 0 {
         preprocess::preprocess_all();
     }
-
-    // more program logic goes here...
 }
 
 fn ala() {
-//    let args: Vec<_> = env::args().collect();
-
     tag::test_paralell();
-
-
-//    let args = vec!["pmi".to_string()];
-//    match args.first().map(|x| x.as_str()) {
-//        Some("preprocess") => preprocess::preprocess_all(),
-//        Some("pmi") => pmi::pmis(),
-//        Some("llr") => llr::llr(),
-//        _ => panic!("what to do?"),
-//    }
 }
 
 

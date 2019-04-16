@@ -7,14 +7,14 @@ use std::fs::read_to_string;
 
 #[derive(Debug)]
 struct LlrEntry {
-    w1: String,
-    w2: String,
+    w1: Unigram,
+    w2: Unigram,
     llr: f64,
 }
 
 impl Display for LlrEntry {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        write!(f, "LlrEntry(w1: \"{}\",\tw2: \"{}\",\tllr: {:.*}", self.w1, self.w2, 4, self.llr)
+        write!(f, "LlrEntry(w1: \"{:?}\",\tw2: \"{:?}\",\tllr: {:.*}", self.w1, self.w2, 4, self.llr)
     }
 }
 
@@ -55,34 +55,34 @@ fn denorm_entropy(counts: Vec<f64>) -> f64 {
     sum * -1f64
 }
 
-pub fn count_words(entries: Vec<(TaggedBigram,i32)>) -> (HashMap<Unigram, i64>,HashMap<Unigram, i64>) {
+pub fn count_words(entries: Vec<(TaggedBigram, i32)>) -> (HashMap<Unigram, i64>, HashMap<Unigram, i64>) {
     let mut hmap1: HashMap<Unigram, i64> = HashMap::new();
     let mut hmap2: HashMap<Unigram, i64> = HashMap::new();
 
 
-    for (entry,count) in entries {
+    for (entry, count) in entries {
         let new_val = hmap1.get(&entry.w1).unwrap_or(&0i64) + count as i64;
         hmap1.insert(entry.w1, new_val);
 
         let new_val2 = hmap2.get(&entry.w2).unwrap_or(&0i64) + count as i64;
         hmap2.insert(entry.w2, new_val2);
     }
-    (hmap1,hmap2)
+    (hmap1, hmap2)
 }
 
 pub fn llr() {
     let json = read_to_string("bigrams.out").unwrap();
-    let bigrams = serde_json::from_str(bigrams).unwrap();
-    let (w1_counts,w2_counts) = count_words(bigrams.clone());
-    let bigram_count = bigrams.iter().map(|x| x.count).sum::<i64>() as f64;
+    let bigrams: Vec<(TaggedBigram, i32)> = serde_json::from_str(&json).unwrap();
+    let (w1_counts, w2_counts) = count_words(bigrams.clone());
+    let bigram_count = bigrams.iter().map(|(b, count)| (*count) as i64).sum::<i64>() as f64;
 
     let bigrams_iter = bigrams.iter();
 
 
-    let mut llrs = bigrams_iter.map(|(bigram,count)| {
-        let k11 = count as f64;
-        let w1_count = *(w1_counts.get(entry.w1.as_str()).unwrap_or(&0i64)) as f64;
-        let w2_count = *(w2_counts.get(entry.w2.as_str()).unwrap_or(&0i64)) as f64;
+    let mut llrs = bigrams_iter.map(|(entry, count)| {
+        let k11 = (*count) as f64;
+        let w1_count = *(w1_counts.get(&entry.w1).unwrap_or(&0i64)) as f64;
+        let w2_count = *(w2_counts.get(&entry.w2).unwrap_or(&0i64)) as f64;
 
         let k12 = w1_count - k11;
         let k21 = w2_count - k11;
@@ -102,7 +102,9 @@ pub fn llr() {
     llrs.sort_by(|a, b| b.llr.partial_cmp(&a.llr).unwrap_or(Ordering::Equal));
 //    llrs.reverse();
 
-    llrs.iter().take(30).for_each(|c| println!("{}", c));
+    llrs.iter()
+        .filter(|entry| entry.w1.cat == "subst" && entry.w2.cat == "adj")// todo:Bcm - check how to check for noun
+        .take(50).for_each(|c| println!("{}", c));
 //
 //    for (i, entry) in llrs.iter().enumerate() {
 //        if i % 200 == 0 {

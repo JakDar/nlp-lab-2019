@@ -41,7 +41,9 @@ fn count_tagged_bigrams(v: Vec<(TaggedBigram)>) -> HashMap<TaggedBigram, i32> {
         let count = bigrams.get(&bigram).unwrap_or(&0i32);
         bigrams.insert(bigram.clone(), *count + 1);
     });
-    bigrams
+
+    //filter only once occuring
+    bigrams.into_iter().filter(|(x,y)| *y>1).collect::<HashMap<TaggedBigram,i32>>()
 }
 
 fn tagging_thread(port: i32, filenames: Vec<String>) -> JoinHandle<HashMap<TaggedBigram, i32>> {
@@ -55,6 +57,7 @@ fn tagging_thread(port: i32, filenames: Vec<String>) -> JoinHandle<HashMap<Tagge
                     let r = count_tagged_bigrams(get_tags(port, &format!("../../lower_ustawy/{}", path)));
 
                     let for_saving = utils::hash_to_vec(r.clone());
+
                     let json = serde_json::to_string(&for_saving).unwrap();
                     write(format!("../../lemma_bigram_ustawy/{}", path), json).unwrap();
                     file_count += 1;
@@ -192,7 +195,6 @@ fn parse(input: String) -> Vec<TaggedBigram> {
 //                    println!("{:?}", bigram.clone());
                     bigrams.push(bigram);
                 }
-
                 prev_unigram = Some(cat);
             } else {
                 prev_unigram = None
@@ -221,7 +223,7 @@ fn parse_cat(label: &str, s: &str) -> Option<Unigram> {
 
 #[test]
 fn parse_cat_test() {
-    assert_eq!(Unigram { w: "lubić".to_string(), cat: "fin".to_string() }, parse_cat("", "	lubić	fin:sg:ter:imperf	disamb"));
+    assert_eq!(Option::Some(Unigram { w: "lubić".to_string(), cat: "fin".to_string() }), parse_cat("", "	lubić	fin:sg:ter:imperf	disamb"));
     assert_eq!(Option::None, parse_cat("", "	interp	disamb'"))
 }
 
