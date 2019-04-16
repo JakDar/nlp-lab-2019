@@ -6,6 +6,7 @@ use clap::{App, Arg, SubCommand};
 mod preprocess;
 mod llr;
 mod tag;
+pub mod utils;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() {

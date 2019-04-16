@@ -5,7 +5,7 @@ use std::fs::read_to_string;
 use std::fs::write;
 use std::process::exit;
 use std::thread;
-
+use crate::utils;
 use std::thread::JoinHandle;
 use std::time::Duration;
 use itertools::Batching;
@@ -17,7 +17,7 @@ use regex::Regex;
 use reqwest;
 use reqwest::get;
 
-use crate::preprocess::ls;
+use crate::preprocess::{ls, ls_filenames};
 use itertools::Itertools;
 use std::collections::hash_map::RandomState;
 use std::ffi::OsString;
@@ -35,24 +35,34 @@ pub struct Unigram {
 }
 
 
+fn count_tagged_bigrams(v: Vec<(TaggedBigram)>) -> HashMap<TaggedBigram, i32> {
+    let mut bigrams: HashMap<TaggedBigram, i32> = HashMap::new();
+    v.into_iter().for_each(|bigram| {
+        let count = bigrams.get(&bigram).unwrap_or(&0i32);
+        bigrams.insert(bigram.clone(), *count + 1);
+    });
+    bigrams
+}
+
 fn tagging_thread(port: i32, filenames: Vec<String>) -> JoinHandle<HashMap<TaggedBigram, i32>> {
     thread::spawn(move || {
         let mut file_count = 0;
         let files_size = filenames.len();
         println!("spawned thread for port {}", port);
-        let mut bigrams: HashMap<TaggedBigram, i32> = HashMap::new();
-        filenames.iter().flat_map(|path|
-            {
-                let r = get_tags(port, path);
-                file_count += 1;
-                println!("Port {}: {} out of {} finished", port, file_count, files_size);
-                r
-            })
-            //todo:bcm - to hashmap and save here
-            .for_each(|bigram| {
-                let count = bigrams.get(&bigram).unwrap_or(&0i32);
-                bigrams.insert(bigram.clone(), *count);
-            });
+        let bigrams =
+            filenames.iter().map(|path|
+                {
+                    let r = count_tagged_bigrams(get_tags(port, &format!("../../lower_ustawy/{}", path)));
+
+                    let for_saving = utils::hash_to_vec(r.clone());
+                    let json = serde_json::to_string(&for_saving).unwrap();
+                    write(format!("../../lemma_bigram_ustawy/{}", path), json).unwrap();
+                    file_count += 1;
+                    println!("Port {}: {} out of {} finished", port, file_count, files_size);
+
+                    r
+                })
+                .fold1(|h1, h2| merged_counters(h1, h2)).unwrap_or(HashMap::new());
         println!("Port {} finished", port);
         bigrams
     })
@@ -70,18 +80,14 @@ fn merged_counters(h1: HashMap<TaggedBigram, i32>, h2: HashMap<TaggedBigram, i32
     res
 }
 
-fn load_serialized_counter() -> HashMap<TaggedBigram,i32>{
+fn load_serialized_counter() -> HashMap<TaggedBigram, i32> {
     let serializedd_dir = ls("../../lemma_bigram_ustawy");
 
     serializedd_dir.iter().map(|filename|
         {
             let json = read_to_string(filename).unwrap();
             let list: Vec<(TaggedBigram, i32)> = serde_json::from_str(&json).unwrap();
-            let mut hmap = HashMap::new();
-            for (k,v) in list{
-                hmap.insert(k,v);
-            }
-            hmap
+            utils::vec_to_hash(list)
         }
     )
         .fold1(|x, y| merged_counters(x, y))
@@ -90,11 +96,10 @@ fn load_serialized_counter() -> HashMap<TaggedBigram,i32>{
 
 
 pub fn test_paralell() {
-    let mut source_dir = ls("../../lower_ustawy");
-    let mut dst_dir = ls("../../lemma_bigram_ustawy").into_iter().collect::<HashSet<String>>();
+    let mut source_dir = ls_filenames("../../lower_ustawy");
+    let mut dst_dir = ls_filenames("../../lemma_bigram_ustawy").into_iter().collect::<HashSet<String>>();
 
-
-    println!("Docs to hanlde: {} of {}" ,source_dir.len() - dst_dir.len(), source_dir.len());
+    println!("Docs to hanlde: {} of {}", source_dir.len() - dst_dir.len(), source_dir.len());
 
     let already_serialized = load_serialized_counter();
 
@@ -103,7 +108,7 @@ pub fn test_paralell() {
 
 
     let mut x1 = source_dir.into_iter()
-        .filter(|path| !dst_dir.contains(path) )
+        .filter(|path| !dst_dir.contains(path))
         .map(|x| (rng.gen_range(9200i32, 9206i32), x))
 //        .take(2)
         .sorted();
@@ -116,9 +121,8 @@ pub fn test_paralell() {
     }
 
 
-
     let bigrams = hanldes.into_iter().map(move |join_handle| join_handle.join().unwrap())
-        .fold(already_serialized,|x, y| merged_counters(x, y));
+        .fold(already_serialized, |x, y| merged_counters(x, y));
 
     println!("{:?}", bigrams);
 
@@ -179,10 +183,10 @@ fn parse(input: String) -> Vec<TaggedBigram> {
         for i in 0..lines.len() / 2 {
 //            println!("{}", lines.get(2 * i).unwrap());
 //            println!("{}", lines.get(2 * i + 1).unwrap());
-            let l1= lines.get(2 * i).unwrap();
-            let opt_cat = parse_cat(l1,lines.get(2 * i + 1).unwrap())
+            let l1 = lines.get(2 * i).unwrap();
+            let opt_cat = parse_cat(l1, lines.get(2 * i + 1).unwrap())
                 .filter(|cat| cat.w.chars().all(|c| c.is_alphabetic()));
-            if  let Some(cat) = opt_cat {
+            if let Some(cat) = opt_cat {
                 if let Some(unigram) = prev_unigram {
                     let bigram = TaggedBigram { w1: unigram, w2: cat.clone() };
 //                    println!("{:?}", bigram.clone());
@@ -200,27 +204,25 @@ fn parse(input: String) -> Vec<TaggedBigram> {
 }
 
 
-fn parse_cat(label:&str, s: &str) -> Option<Unigram> {
+fn parse_cat(label: &str, s: &str) -> Option<Unigram> {
     let re = Regex::new(r"\t(?P<lemma>\w.*?)\t(?P<cat>\w+?)[:\t]").unwrap();
-    match re.captures(s){
+    match re.captures(s) {
         Option::Some(caps) =>
-        Some(Unigram {
-            w: caps["lemma"].to_string(),
-            cat: caps["cat"].to_string(),
-        }),
+            Some(Unigram {
+                w: caps["lemma"].to_string(),
+                cat: caps["cat"].to_string(),
+            }),
         Option::None => {
-            println!("Cannot parse categor from  '{}', label: {}",s,label);
+            println!("Cannot parse categor from  '{}', label: {}", s, label);
             Option::None
         }
     }
-
-
 }
 
 #[test]
 fn parse_cat_test() {
-    assert_eq!(Unigram { w: "lubić".to_string(), cat: "fin".to_string() }, parse_cat("	lubić	fin:sg:ter:imperf	disamb"));
-    assert_eq!(Option::None,parse_cat("	interp	disamb'"))
+    assert_eq!(Unigram { w: "lubić".to_string(), cat: "fin".to_string() }, parse_cat("", "	lubić	fin:sg:ter:imperf	disamb"));
+    assert_eq!(Option::None, parse_cat("", "	interp	disamb'"))
 }
 
 

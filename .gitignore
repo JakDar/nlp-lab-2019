@@ -7,5 +7,6 @@ target/
 .ipynb_checkpoints/
 ustawy/
 lower_ustawy/
+lemma_bigram_ustawy/
 polimorfologik/
 *.out
