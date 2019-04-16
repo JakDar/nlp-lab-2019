@@ -103,14 +103,8 @@ pub fn llr() {
 //    llrs.reverse();
 
     llrs.iter()
-        .filter(|entry| entry.w1.cat == "subst" && entry.w2.cat == "adj")// todo:Bcm - check how to check for noun
+        // .filter(|entry| entry.w1.cat == "subst" && entry.w2.cat == "adj")
         .take(50).for_each(|c| println!("{}", c));
-//
-//    for (i, entry) in llrs.iter().enumerate() {
-//        if i % 200 == 0 {
-//            println!("{}, {}", i, entry);
-//        }
-//    }
 }
 
 

@@ -13,15 +13,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 fn main() {
     let start = SystemTime::now();
 
-    ala();
-    let end = SystemTime::now();
+    // ala();
+    // let end = SystemTime::now();
+    // let millis = end.duration_since(UNIX_EPOCH).unwrap() - start.duration_since(UNIX_EPOCH).unwrap();
+    // println!("Worked: {:?}", millis);
 
-
-    let millis = end.duration_since(UNIX_EPOCH).unwrap() - start.duration_since(UNIX_EPOCH).unwrap();
-
-    println!("Worked: {:?}", millis);
-
-    exit(1);
+    // exit(1);
 
     //Fixme - not best Cli experience
     let matches = App::new("Lab5")
@@ -41,13 +38,18 @@ fn main() {
 
     if matches.occurrences_of("llr") > 0 {
         println!("llr");
-//        llr::llr();
+       llr::llr();
     } else if matches.occurrences_of("tags") > 0 {
         println!("tags");
         println!("Not implemented");
     } else if matches.occurrences_of("preprocess") > 0 {
         preprocess::preprocess_all();
     }
+
+
+    let end = SystemTime::now();
+    let millis = end.duration_since(UNIX_EPOCH).unwrap() - start.duration_since(UNIX_EPOCH).unwrap();
+    println!("Worked: {:?}", millis);
 }
 
 fn ala() {

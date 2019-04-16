@@ -1,0 +1,76 @@
+* Lab5
+
+
+** Task 
+   Use krnnt2 docker image with morfeusz to lemmatize and then find bigrams.
+  #+BEGIN_SRC bash
+  run0:
+    docker run -it -p 9200:9200 djstrong/krnnt2 python3 /home/krnnt/krnnt/krnnt_serve.py /home/krnnt/krnnt/data
+  #+END_SRC
+
+
+** Execution
+*** Filtering by subst and adj categories:
+    #+BEGIN_SRC rust
+    llrs.iter()
+        .filter(|entry| entry.w1.cat == "subst" && entry.w2.cat == "adj")
+        .take(50).for_each(|c| println!("{}", c));
+    #+END_SRC
+
+*** Result
+    #+BEGIN_SRC plain
+    LlrEntry(w1: "Unigram { w: "minister", cat: "subst" }", w2: "Unigram { w: "właściwy", cat: "adj" }",    llr: 68511.4453
+    LlrEntry(w1: "Unigram { w: "rzeczpospolita", cat: "subst" }",   w2: "Unigram { w: "polski", cat: "adj" }",      llr: 39735.6471
+    LlrEntry(w1: "Unigram { w: "jednostka", cat: "subst" }",        w2: "Unigram { w: "organizacyjny", cat: "adj" }",       llr: 22740.4893
+    LlrEntry(w1: "Unigram { w: "samorząd", cat: "subst" }", w2: "Unigram { w: "terytorialny", cat: "adj" }",        llr: 21984.7724
+    LlrEntry(w1: "Unigram { w: "produkt", cat: "subst" }",  w2: "Unigram { w: "leczniczy", cat: "adj" }",   llr: 21487.0111
+    LlrEntry(w1: "Unigram { w: "papier", cat: "subst" }",   w2: "Unigram { w: "wartościowy", cat: "adj" }", llr: 18412.2468
+    LlrEntry(w1: "Unigram { w: "ubezpieczenie", cat: "subst" }",    w2: "Unigram { w: "społeczny", cat: "adj" }",   llr: 16190.1470
+    LlrEntry(w1: "Unigram { w: "działalność", cat: "subst" }",      w2: "Unigram { w: "gospodarczy", cat: "adj" }", llr: 15553.8473
+    LlrEntry(w1: "Unigram { w: "unia", cat: "subst" }",     w2: "Unigram { w: "europejski", cat: "adj" }",  llr: 14774.7395
+    LlrEntry(w1: "Unigram { w: "państwo", cat: "subst" }",  w2: "Unigram { w: "członkowski", cat: "adj" }", llr: 13984.1902
+    LlrEntry(w1: "Unigram { w: "finanse", cat: "subst" }",  w2: "Unigram { w: "publiczny", cat: "adj" }",   llr: 13919.9446
+    LlrEntry(w1: "Unigram { w: "straż", cat: "subst" }",    w2: "Unigram { w: "graniczny", cat: "adj" }",   llr: 13477.7539
+    LlrEntry(w1: "Unigram { w: "sprawa", cat: "subst" }",   w2: "Unigram { w: "wewnętrzny", cat: "adj" }",  llr: 13135.2900
+    LlrEntry(w1: "Unigram { w: "obrona", cat: "subst" }",   w2: "Unigram { w: "narodowy", cat: "adj" }",    llr: 13081.2799
+    LlrEntry(w1: "Unigram { w: "administracja", cat: "subst" }",    w2: "Unigram { w: "rządowy", cat: "adj" }",     llr: 12008.5134
+    LlrEntry(w1: "Unigram { w: "opieka", cat: "subst" }",   w2: "Unigram { w: "zdrowotny", cat: "adj" }",   llr: 11742.3569
+    LlrEntry(w1: "Unigram { w: "podatek", cat: "subst" }",  w2: "Unigram { w: "dochodowy", cat: "adj" }",   llr: 11376.9291
+    LlrEntry(w1: "Unigram { w: "osoba", cat: "subst" }",    w2: "Unigram { w: "fizyczny", cat: "adj" }",    llr: 10977.8242
+    LlrEntry(w1: "Unigram { w: "osoba", cat: "subst" }",    w2: "Unigram { w: "prawny", cat: "adj" }",      llr: 9381.1072
+    LlrEntry(w1: "Unigram { w: "komisja", cat: "subst" }",  w2: "Unigram { w: "wyborczy", cat: "adj" }",    llr: 8424.5427
+    LlrEntry(w1: "Unigram { w: "służba", cat: "subst" }",   w2: "Unigram { w: "cywilny", cat: "adj" }",     llr: 8106.0762
+    LlrEntry(w1: "Unigram { w: "żołnierz", cat: "subst" }", w2: "Unigram { w: "zawodowy", cat: "adj" }",    llr: 8030.3183
+    LlrEntry(w1: "Unigram { w: "wyrób", cat: "subst" }",    w2: "Unigram { w: "akcyzowy", cat: "adj" }",    llr: 7875.3129
+    LlrEntry(w1: "Unigram { w: "tekst", cat: "subst" }",    w2: "Unigram { w: "jednolity", cat: "adj" }",   llr: 7674.7117
+    LlrEntry(w1: "Unigram { w: "stanowisko", cat: "subst" }",       w2: "Unigram { w: "służbowy", cat: "adj" }",    llr: 7656.3226
+    LlrEntry(w1: "Unigram { w: "siła", cat: "subst" }",     w2: "Unigram { w: "zbrojny", cat: "adj" }",     llr: 7634.7376
+    LlrEntry(w1: "Unigram { w: "służba", cat: "subst" }",   w2: "Unigram { w: "wojskowy", cat: "adj" }",    llr: 7613.5147
+    LlrEntry(w1: "Unigram { w: "straż", cat: "subst" }",    w2: "Unigram { w: "pożarny", cat: "adj" }",     llr: 7378.1792
+    LlrEntry(w1: "Unigram { w: "sprawozdanie", cat: "subst" }",     w2: "Unigram { w: "finansowy", cat: "adj" }",   llr: 7253.0317
+    LlrEntry(w1: "Unigram { w: "lokal", cat: "subst" }",    w2: "Unigram { w: "mieszkalny", cat: "adj" }",  llr: 7061.6674
+    LlrEntry(w1: "Unigram { w: "środek", cat: "subst" }",   w2: "Unigram { w: "trwały", cat: "adj" }",      llr: 6606.9495
+    LlrEntry(w1: "Unigram { w: "życie", cat: "subst" }",    w2: "Unigram { w: "niniejszy", cat: "adj" }",   llr: 6488.3552
+    LlrEntry(w1: "Unigram { w: "rozporządzenie", cat: "subst" }",   w2: "Unigram { w: "szczegółowy", cat: "adj" }", llr: 6266.8974
+    LlrEntry(w1: "Unigram { w: "energia", cat: "subst" }",  w2: "Unigram { w: "elektryczny", cat: "adj" }", llr: 6193.8165
+    LlrEntry(w1: "Unigram { w: "postępowanie", cat: "subst" }",     w2: "Unigram { w: "karny", cat: "adj" }",       llr: 5727.5028
+    LlrEntry(w1: "Unigram { w: "osobowość", cat: "subst" }",        w2: "Unigram { w: "prawny", cat: "adj" }",      llr: 5609.9165
+    LlrEntry(w1: "Unigram { w: "dziennik", cat: "subst" }", w2: "Unigram { w: "urzędowy", cat: "adj" }",    llr: 5579.4126
+    LlrEntry(w1: "Unigram { w: "rada", cat: "subst" }",     w2: "Unigram { w: "nadzorczy", cat: "adj" }",   llr: 5456.1693
+    LlrEntry(w1: "Unigram { w: "styl", cat: "subst" }",     w2: "Unigram { w: "name", cat: "adj" }",        llr: 5381.0986
+    LlrEntry(w1: "Unigram { w: "partia", cat: "subst" }",   w2: "Unigram { w: "polityczny", cat: "adj" }",  llr: 5215.7557
+    LlrEntry(w1: "Unigram { w: "rok", cat: "subst" }",      w2: "Unigram { w: "kalendarzowy", cat: "adj" }",        llr: 5213.1635
+    LlrEntry(w1: "Unigram { w: "rok", cat: "subst" }",      w2: "Unigram { w: "podatkowy", cat: "adj" }",   llr: 5148.4680
+    LlrEntry(w1: "Unigram { w: "obszar", cat: "subst" }",   w2: "Unigram { w: "celny", cat: "adj" }",       llr: 4843.5755
+    LlrEntry(w1: "Unigram { w: "komendant", cat: "subst" }",        w2: "Unigram { w: "główny", cat: "adj" }",      llr: 4842.5485
+    LlrEntry(w1: "Unigram { w: "okręg", cat: "subst" }",    w2: "Unigram { w: "wyborczy", cat: "adj" }",    llr: 4803.2625
+    LlrEntry(w1: "Unigram { w: "fundusz", cat: "subst" }",  w2: "Unigram { w: "inwestycyjny", cat: "adj" }",        llr: 4775.4780
+    LlrEntry(w1: "Unigram { w: "materiał", cat: "subst" }", w2: "Unigram { w: "siewny", cat: "adj" }",      llr: 4652.8758
+    LlrEntry(w1: "Unigram { w: "organ", cat: "subst" }",    w2: "Unigram { w: "egzekucyjny", cat: "adj" }", llr: 4617.1186
+    LlrEntry(w1: "Unigram { w: "sąd", cat: "subst" }",      w2: "Unigram { w: "okręgowy", cat: "adj" }",    llr: 4582.0141
+    LlrEntry(w1: "Unigram { w: "administracja", cat: "subst" }",    w2: "Unigram { w: "publiczny", cat: "adj" }",   llr: 4573.3490
+    #+END_SRC
+    
+*** Comments
+    We can se non-ideal results  like /rzeczpospolita polski/ or /państwo członkowski/, /siła zbrojny/, because 
+    words are lemmatized separately, but neverheless I think we get way better results than without lemmatization.
