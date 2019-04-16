@@ -4,7 +4,6 @@ use std::process::exit;
 use clap::{App, Arg, SubCommand};
 
 mod preprocess;
-pub mod load_bigrams;
 mod llr;
 mod tag;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -40,7 +39,7 @@ fn main() {
 
     if matches.occurrences_of("llr") > 0 {
         println!("llr");
-        llr::llr();
+//        llr::llr();
     } else if matches.occurrences_of("tags") > 0 {
         println!("tags");
         println!("Not implemented");
@@ -54,7 +53,7 @@ fn main() {
 fn ala() {
 //    let args: Vec<_> = env::args().collect();
 
-    tag::test();
+    tag::test_paralell();
 
 
 //    let args = vec!["pmi".to_string()];
