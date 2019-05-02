@@ -1,5 +1,5 @@
 run0:
-	docker run -it -p 9200:9200 djstrong/krnnt2 python3 /home/krnnt/krnnt/krnnt_serve.py /home/krnnt/krnnt/data
+	docker run -it --rm -p 9200:9200 djstrong/krnnt2 python3 /home/krnnt/krnnt/krnnt_serve.py /home/krnnt/krnnt/data
 run1:
 	docker run -it -p 9201:9200 djstrong/krnnt2 python3 /home/krnnt/krnnt/krnnt_serve.py /home/krnnt/krnnt/data
 run2:
