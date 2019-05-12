@@ -11,3 +11,4 @@ lemma_bigram_ustawy/
 polimorfologik/
 *.out
 *.bak
+venv/
