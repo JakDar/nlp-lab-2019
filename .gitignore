@@ -10,3 +10,4 @@ lower_ustawy/
 lemma_bigram_ustawy/
 polimorfologik/
 *.out
+*.bak
