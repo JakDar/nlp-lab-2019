@@ -8,6 +8,7 @@ target/
 ustawy/
 lower_ustawy/
 lemma_bigram_ustawy/
+cll/
 polimorfologik/
 *.out
 *.bak
