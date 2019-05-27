@@ -41,12 +41,9 @@ def remove_repeating_subseqs(subseq: List[int], input_list: List[int]):
     subseq_str = seq(subseq).reduce(lambda x, y: f"{x},{y}")
     end_str = seq(rest).reduce(lambda x, y: f"{x},{y}")
 
-    new_end = end_str.replace(subseq_str,"").replae(",,",",")
+    new_end = end_str.replace(subseq_str, "").replace(",,", ",")
 
-
-
-
-    return rest
+    return input_list[:end] + seq(new_end.split(",")).filter(lambda x: len(x)!=0 )map(lambda x: int(x)).to_list()
 
 
 def end_of_subseq(subseq: List[int], input_list: List[int]):
